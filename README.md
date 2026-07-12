@@ -2,7 +2,7 @@
 
 A solo-built systematic swing-trading system: a Google Sheets data plant, an Apps Script pipeline, a single-file HTML terminal, and a Python validation harness — governed by one rule that only evidence can change.
 
-Live terminal: https://nomnomsoes.github.io/lean-terminal
+*Live demo: coming soon — the validation study below runs today.*
 
 ---
 
