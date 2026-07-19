@@ -1,5 +1,5 @@
 ## Stress Test: 2008 Financial Crisis
-Circuit breaker caps a -60% semiconductor crash at -18% max drawdown — validated on real daily data across 4 sources. → [stress-test/STRESS_2008.html](stress-test/STRESS_2008.html)
+Circuit breaker caps a -60% semiconductor crash at -18% max drawdown — validated on real daily data across 4 sources. → **[View the live study](https://raul-builds.github.io/lean-terminal/STRESS_2008.html)**
 
 # Lean Terminal
 
