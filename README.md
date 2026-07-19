@@ -1,3 +1,6 @@
+## Stress Test: 2008 Financial Crisis
+Circuit breaker caps a -60% semiconductor crash at -18% max drawdown — validated on real daily data across 4 sources. → [stress-test/STRESS_2008.html](stress-test/STRESS_2008.html)
+
 # Lean Terminal
 
 A solo-built systematic swing-trading system: a Google Sheets data plant, an Apps Script pipeline, a single-file HTML terminal, and a Python validation harness — governed by one rule that only evidence can change.
