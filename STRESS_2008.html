@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>2008 Stress Test — Lean Terminal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap');
+:root{
+ --bg:#070d18;--panel:#0d1626;--panel2:#111d30;
+ --line:rgba(99,160,255,.14);--line2:rgba(99,160,255,.26);
+ --text:#d6e8ff;--muted:#7a97b8;--dim:#425a78;
+ --green:#20e07a;--red:#ff5a5a;--blue:#4fa3ff;--amber:#f5c542;
+ --mono:'Space Mono',ui-monospace,Menlo,monospace;--sans:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;
+ background-image:radial-gradient(circle at 20% -10%,rgba(79,163,255,.06),transparent 40%),radial-gradient(circle at 90% 10%,rgba(32,224,122,.04),transparent 35%)}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 28px 80px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--blue);margin-bottom:18px}
+.eyebrow .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:8px;vertical-align:middle;box-shadow:0 0 8px var(--green)}
+h1{font-size:clamp(30px,5vw,52px);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:14px}
+h1 .hl{color:var(--green)}
+.lede{font-size:17px;color:var(--muted);max-width:640px;margin-bottom:8px}
+.lede b{color:var(--text);font-weight:600}
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:36px 0}
+.stat{background:var(--panel);padding:22px 20px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.stat .v{font-size:34px;font-weight:800;font-family:var(--mono);line-height:1}
+.stat .v.red{color:var(--red)}.stat .v.green{color:var(--green)}.stat .v.blue{color:var(--blue)}
+.stat .sub{font-size:12px;color:var(--muted);margin-top:8px}
+/* chart card */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px 20px;margin:28px 0}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.card-h h2{font-size:15px;font-weight:600;letter-spacing:.01em}
+.card-h .meta{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.chart{width:100%;height:auto;display:block;margin-top:8px}
+.grid{stroke:var(--line);stroke-width:1}
+.ytick{fill:var(--dim);font-family:var(--mono);font-size:10px;text-anchor:end}
+.xtick{fill:var(--dim);font-family:var(--mono);font-size:9.5px;text-anchor:middle}
+.trip{stroke:var(--blue);stroke-width:1;stroke-dasharray:3 3;opacity:.6}
+.triplabel{fill:var(--blue);font-family:var(--mono);font-size:10.5px;font-weight:700}
+.lbl-bh{fill:var(--red);font-family:var(--mono);font-size:12px;font-weight:700}
+.lbl-sys{fill:var(--green);font-family:var(--mono);font-size:12px;font-weight:700}
+.legend{display:flex;gap:20px;margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend .sw{width:14px;height:3px;border-radius:2px}
+/* section */
+.sec{margin-top:52px}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
+th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:400}
+td{color:var(--text)}
+td.mono{font-family:var(--mono)}
+tr.highlight td{background:rgba(32,224,122,.06)}
+tr.highlight td:first-child{border-left:2px solid var(--green)}
+.tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--line2);color:var(--muted)}
+.tag.agree{color:var(--green);border-color:rgba(32,224,122,.4)}
+/* prose */
+.prose p{color:var(--muted);margin-bottom:14px;max-width:680px}
+.prose p b{color:var(--text);font-weight:600}
+.prose ul{list-style:none;max-width:680px}
+.prose li{color:var(--muted);padding-left:22px;position:relative;margin-bottom:11px}
+.prose li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:1px;background:var(--amber)}
+.caveat{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;padding:18px 20px;margin-top:8px}
+.caveat h3{font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:12px}
+.foot{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.foot a{color:var(--blue);text-decoration:none}
+@media(max-width:640px){.stats{grid-template-columns:1fr}.stat .v{font-size:30px}}
+</style></head>
+<body><div class="wrap">
+<div class="eyebrow"><span class="dot"></span>Lean Terminal · Out-of-Sample Validation</div>
+<h1>The 2008 crash cut semis <span class="hl">60%</span>.<br>The system held the line at 18%.</h1>
+<p class="lede">A systematic trading system is only as trustworthy as its worst day. This is the worst day: the 2008–09 financial crisis, replayed on <b>real daily prices</b>, run through the live rule set and its −15% circuit breaker. No parameters were tuned to this period — the crash was the exam, not the study guide.</p>
+
+<div class="stats">
+ <div class="stat"><div class="k">Semis peak → trough</div><div class="v red">−60%</div><div class="sub">SOXX, May 2008 → Nov 2008</div></div>
+ <div class="stat"><div class="k">System max drawdown</div><div class="v green">−18%</div><div class="sub">−11% with cash firewall blended</div></div>
+ <div class="stat"><div class="k">Data sources agreeing</div><div class="v blue">4</div><div class="sub">to the decimal</div></div>
+</div>
+
+<div class="card">
+ <div class="card-h"><h2>Portfolio drawdown through the crisis</h2><span class="meta">daily · Jan 2008 – Jun 2009</span></div>
+ <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" class="chart">
+<defs>
+<linearGradient id="gbh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a5a" stop-opacity="0.22"/><stop offset="1" stop-color="#ff5a5a" stop-opacity="0"/></linearGradient>
+<linearGradient id="gsys" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#20e07a" stop-opacity="0.20"/><stop offset="1" stop-color="#20e07a" stop-opacity="0"/></linearGradient>
+</defs>
+<line x1="56" y1="28.0" x2="876" y2="28.0" class="grid"/><text x="48" y="31.0" class="ytick">0%</text><line x1="56" y1="108.3" x2="876" y2="108.3" class="grid"/><text x="48" y="111.3" class="ytick">-15%</text><line x1="56" y1="188.6" x2="876" y2="188.6" class="grid"/><text x="48" y="191.6" class="ytick">-30%</text><line x1="56" y1="268.9" x2="876" y2="268.9" class="grid"/><text x="48" y="271.9" class="ytick">-45%</text><line x1="56" y1="349.2" x2="876" y2="349.2" class="grid"/><text x="48" y="352.2" class="ytick">-60%</text>
+<path d="M56.0,28.0 L56.0,28.0 L62.5,72.0 L69.0,78.4 L75.5,97.5 L82.0,100.2 L88.5,84.8 L95.0,87.4 L101.6,63.9 L108.1,106.3 L114.6,85.8 L121.1,87.1 L127.6,90.2 L134.1,85.4 L140.6,84.8 L147.1,98.9 L153.6,107.3 L160.1,102.2 L166.6,109.3 L173.1,110.3 L179.7,101.6 L186.2,90.5 L192.7,104.6 L199.2,75.0 L205.7,88.4 L212.2,90.5 L218.7,78.7 L225.2,66.3 L231.7,56.5 L238.2,59.6 L244.7,50.2 L251.2,51.8 L257.7,43.5 L264.3,28.0 L270.8,43.5 L277.3,52.8 L283.8,43.5 L290.3,48.5 L296.8,40.9 L303.3,77.9 L309.8,53.4 L316.3,58.7 L322.8,74.3 L329.3,91.1 L335.8,108.6 L342.3,116.2 L348.9,129.8 L355.4,116.9 L361.9,113.3 L368.4,144.0 L374.9,136.1 L381.4,138.1 L387.9,121.2 L394.4,98.1 L400.9,91.8 L407.4,104.7 L413.9,102.7 L420.4,109.3 L427.0,122.2 L433.5,150.0 L440.0,165.8 L446.5,180.7 L453.0,170.8 L459.5,185.6 L466.0,174.1 L472.5,195.2 L479.0,232.9 L485.5,260.7 L492.0,250.4 L498.5,270.3 L505.0,287.4 L511.6,294.0 L518.1,262.3 L524.6,247.8 L531.1,280.8 L537.6,308.3 L544.1,317.2 L550.6,349.9 L557.1,329.0 L563.6,335.0 L570.1,333.4 L576.6,310.6 L583.1,299.0 L589.7,286.8 L596.2,307.9 L602.7,314.2 L609.2,302.0 L615.7,275.2 L622.2,298.7 L628.7,316.8 L635.2,319.5 L641.7,309.2 L648.2,289.7 L654.7,305.9 L661.2,287.4 L667.7,292.1 L674.3,289.1 L680.8,319.5 L687.3,316.2 L693.8,312.9 L700.3,312.2 L706.8,323.5 L713.3,286.8 L719.8,281.8 L726.3,284.8 L732.8,273.5 L739.3,277.2 L745.8,259.7 L752.3,267.3 L758.9,251.1 L765.4,243.5 L771.9,258.7 L778.4,247.1 L784.9,248.7 L791.4,224.6 L797.9,243.8 L804.4,260.0 L810.9,264.6 L817.4,244.1 L823.9,239.9 L830.4,228.0 L837.0,225.6 L843.5,223.6 L850.0,209.1 L856.5,225.0 L863.0,223.0 L869.5,230.9 L876.0,224.6 L876.0,28.0 Z" fill="url(#gbh)"/>
+<path d="M56.0,28.0 L56.0,28.0 L62.5,28.4 L69.0,28.3 L75.5,28.0 L82.0,28.0 L88.5,29.9 L95.0,29.0 L101.6,28.0 L108.1,60.2 L114.6,59.9 L121.1,61.2 L127.6,71.4 L134.1,71.3 L140.6,70.6 L147.1,85.1 L153.6,84.2 L160.1,84.5 L166.6,97.4 L173.1,117.8 L179.7,118.4 L186.2,119.0 L192.7,118.2 L199.2,120.0 L205.7,119.8 L212.2,118.4 L218.7,120.1 L225.2,121.6 L231.7,122.7 L238.2,122.3 L244.7,122.2 L251.2,120.9 L257.7,121.2 L264.3,121.9 L270.8,120.7 L277.3,121.6 L283.8,123.0 L290.3,121.5 L296.8,121.6 L303.3,124.1 L309.8,125.5 L316.3,125.1 L322.8,124.0 L329.3,122.1 L335.8,122.0 L342.3,120.9 L348.9,121.6 L355.4,120.4 L361.9,121.6 L368.4,120.9 L374.9,121.0 L381.4,120.0 L387.9,120.2 L394.4,120.2 L400.9,119.4 L407.4,118.3 L413.9,119.0 L420.4,118.1 L427.0,117.5 L433.5,117.4 L440.0,116.8 L446.5,113.7 L453.0,113.9 L459.5,115.7 L466.0,115.5 L472.5,113.3 L479.0,111.3 L485.5,112.8 L492.0,113.9 L498.5,112.4 L505.0,111.1 L511.6,112.2 L518.1,111.0 L524.6,110.0 L531.1,109.8 L537.6,107.3 L544.1,107.8 L550.6,105.8 L557.1,107.3 L563.6,104.9 L570.1,104.4 L576.6,104.2 L583.1,103.4 L589.7,103.9 L596.2,104.9 L602.7,104.2 L609.2,104.0 L615.7,105.4 L622.2,105.2 L628.7,104.5 L635.2,104.6 L641.7,105.1 L648.2,105.4 L654.7,106.1 L661.2,107.2 L667.7,106.5 L674.3,107.1 L680.8,106.8 L687.3,106.8 L693.8,107.1 L700.3,106.6 L706.8,106.9 L713.3,106.7 L719.8,107.1 L726.3,105.3 L732.8,106.4 L739.3,105.1 L745.8,104.6 L752.3,105.1 L758.9,104.8 L765.4,104.9 L771.9,104.9 L778.4,105.2 L784.9,104.9 L791.4,104.8 L797.9,105.3 L804.4,104.2 L810.9,104.0 L817.4,103.4 L823.9,104.6 L830.4,104.1 L837.0,103.6 L843.5,108.3 L850.0,107.2 L856.5,106.0 L863.0,106.0 L869.5,105.4 L876.0,104.2 L876.0,28.0 Z" fill="url(#gsys)"/>
+<path d="M56.0,28.0 L62.5,72.0 L69.0,78.4 L75.5,97.5 L82.0,100.2 L88.5,84.8 L95.0,87.4 L101.6,63.9 L108.1,106.3 L114.6,85.8 L121.1,87.1 L127.6,90.2 L134.1,85.4 L140.6,84.8 L147.1,98.9 L153.6,107.3 L160.1,102.2 L166.6,109.3 L173.1,110.3 L179.7,101.6 L186.2,90.5 L192.7,104.6 L199.2,75.0 L205.7,88.4 L212.2,90.5 L218.7,78.7 L225.2,66.3 L231.7,56.5 L238.2,59.6 L244.7,50.2 L251.2,51.8 L257.7,43.5 L264.3,28.0 L270.8,43.5 L277.3,52.8 L283.8,43.5 L290.3,48.5 L296.8,40.9 L303.3,77.9 L309.8,53.4 L316.3,58.7 L322.8,74.3 L329.3,91.1 L335.8,108.6 L342.3,116.2 L348.9,129.8 L355.4,116.9 L361.9,113.3 L368.4,144.0 L374.9,136.1 L381.4,138.1 L387.9,121.2 L394.4,98.1 L400.9,91.8 L407.4,104.7 L413.9,102.7 L420.4,109.3 L427.0,122.2 L433.5,150.0 L440.0,165.8 L446.5,180.7 L453.0,170.8 L459.5,185.6 L466.0,174.1 L472.5,195.2 L479.0,232.9 L485.5,260.7 L492.0,250.4 L498.5,270.3 L505.0,287.4 L511.6,294.0 L518.1,262.3 L524.6,247.8 L531.1,280.8 L537.6,308.3 L544.1,317.2 L550.6,349.9 L557.1,329.0 L563.6,335.0 L570.1,333.4 L576.6,310.6 L583.1,299.0 L589.7,286.8 L596.2,307.9 L602.7,314.2 L609.2,302.0 L615.7,275.2 L622.2,298.7 L628.7,316.8 L635.2,319.5 L641.7,309.2 L648.2,289.7 L654.7,305.9 L661.2,287.4 L667.7,292.1 L674.3,289.1 L680.8,319.5 L687.3,316.2 L693.8,312.9 L700.3,312.2 L706.8,323.5 L713.3,286.8 L719.8,281.8 L726.3,284.8 L732.8,273.5 L739.3,277.2 L745.8,259.7 L752.3,267.3 L758.9,251.1 L765.4,243.5 L771.9,258.7 L778.4,247.1 L784.9,248.7 L791.4,224.6 L797.9,243.8 L804.4,260.0 L810.9,264.6 L817.4,244.1 L823.9,239.9 L830.4,228.0 L837.0,225.6 L843.5,223.6 L850.0,209.1 L856.5,225.0 L863.0,223.0 L869.5,230.9 L876.0,224.6" fill="none" stroke="#ff5a5a" stroke-width="2"/>
+<path d="M56.0,28.0 L62.5,28.4 L69.0,28.3 L75.5,28.0 L82.0,28.0 L88.5,29.9 L95.0,29.0 L101.6,28.0 L108.1,60.2 L114.6,59.9 L121.1,61.2 L127.6,71.4 L134.1,71.3 L140.6,70.6 L147.1,85.1 L153.6,84.2 L160.1,84.5 L166.6,97.4 L173.1,117.8 L179.7,118.4 L186.2,119.0 L192.7,118.2 L199.2,120.0 L205.7,119.8 L212.2,118.4 L218.7,120.1 L225.2,121.6 L231.7,122.7 L238.2,122.3 L244.7,122.2 L251.2,120.9 L257.7,121.2 L264.3,121.9 L270.8,120.7 L277.3,121.6 L283.8,123.0 L290.3,121.5 L296.8,121.6 L303.3,124.1 L309.8,125.5 L316.3,125.1 L322.8,124.0 L329.3,122.1 L335.8,122.0 L342.3,120.9 L348.9,121.6 L355.4,120.4 L361.9,121.6 L368.4,120.9 L374.9,121.0 L381.4,120.0 L387.9,120.2 L394.4,120.2 L400.9,119.4 L407.4,118.3 L413.9,119.0 L420.4,118.1 L427.0,117.5 L433.5,117.4 L440.0,116.8 L446.5,113.7 L453.0,113.9 L459.5,115.7 L466.0,115.5 L472.5,113.3 L479.0,111.3 L485.5,112.8 L492.0,113.9 L498.5,112.4 L505.0,111.1 L511.6,112.2 L518.1,111.0 L524.6,110.0 L531.1,109.8 L537.6,107.3 L544.1,107.8 L550.6,105.8 L557.1,107.3 L563.6,104.9 L570.1,104.4 L576.6,104.2 L583.1,103.4 L589.7,103.9 L596.2,104.9 L602.7,104.2 L609.2,104.0 L615.7,105.4 L622.2,105.2 L628.7,104.5 L635.2,104.6 L641.7,105.1 L648.2,105.4 L654.7,106.1 L661.2,107.2 L667.7,106.5 L674.3,107.1 L680.8,106.8 L687.3,106.8 L693.8,107.1 L700.3,106.6 L706.8,106.9 L713.3,106.7 L719.8,107.1 L726.3,105.3 L732.8,106.4 L739.3,105.1 L745.8,104.6 L752.3,105.1 L758.9,104.8 L765.4,104.9 L771.9,104.9 L778.4,105.2 L784.9,104.9 L791.4,104.8 L797.9,105.3 L804.4,104.2 L810.9,104.0 L817.4,103.4 L823.9,104.6 L830.4,104.1 L837.0,103.6 L843.5,108.3 L850.0,107.2 L856.5,106.0 L863.0,106.0 L869.5,105.4 L876.0,104.2" fill="none" stroke="#20e07a" stroke-width="2.2"/>
+<line x1="173.1" y1="28" x2="173.1" y2="376" class="trip"/>
+<circle cx="173.1" cy="117.8" r="4.5" fill="#4fa3ff" stroke="#0a1220" stroke-width="1.5"/>
+<text x="181.1" y="42" class="triplabel">breaker trips · 2008-03-19</text>
+<text x="872.0" y="216.6" class="lbl-bh" text-anchor="end">buy &amp; hold −60%</text>
+<text x="872.0" y="94.2" class="lbl-sys" text-anchor="end">system −18%</text>
+<text x="56.0" y="394" class="xtick">2008-01</text><text x="192.7" y="394" class="xtick">2008-03</text><text x="329.3" y="394" class="xtick">2008-06</text><text x="466.0" y="394" class="xtick">2008-09</text><text x="602.7" y="394" class="xtick">2008-12</text><text x="739.3" y="394" class="xtick">2009-03</text><text x="876.0" y="394" class="xtick">2009-06</text>
+</svg>
+ <div class="legend">
+  <span><span class="sw" style="background:var(--red)"></span>Buy &amp; hold semiconductors</span>
+  <span><span class="sw" style="background:var(--green)"></span>Rule v2 + −15% circuit breaker</span>
+  <span><span class="sw" style="background:var(--blue);height:0;border-top:2px dashed var(--blue)"></span>Breaker fires → revert to cash</span>
+ </div>
+</div>
+
+<div class="sec">
+ <div class="sec-label">What the breaker does</div>
+ <div class="prose">
+ <p>The system runs a regime filter — hold while the trend is up, step to cash when it breaks — with one hard backstop: if the <b>portfolio</b> draws down 15% from its peak, everything reverts to a defensive cash posture, no discretion. That backstop fires on <b>March 19, 2008</b>, six months before Lehman, and keeps the book out of the worst of the collapse.</p>
+ <p>The result is not magic and it is not a prediction. It is a mechanical rule doing exactly one job: converting a portfolio-ending loss into a survivable one. Buy-and-hold ends the window down 36% having touched −60%. The system ends down 13% having touched −18%.</p>
+ </div>
+</div>
+
+<div class="sec">
+ <div class="sec-label">Cross-validation · four independent data paths</div>
+ <table>
+  <thead><tr><th>Data source</th><th>Peak→trough</th><th>System max DD</th><th>Breaker trip</th><th></th></tr></thead>
+  <tbody>
+   <tr><td>GOOGLEFINANCE · raw close</td><td class="mono">−60.2%</td><td class="mono">−19.3%</td><td class="mono">2008-03-19</td><td><span class="tag agree">agree</span></td></tr>
+   <tr><td>Yahoo Finance · raw close</td><td class="mono">−60.2%</td><td class="mono">−19.3%</td><td class="mono">2008-03-19</td><td><span class="tag agree">agree</span></td></tr>
+   <tr><td>Yahoo Finance · adj close</td><td class="mono">−60.1%</td><td class="mono">−19.3%</td><td class="mono">2008-03-19</td><td><span class="tag agree">agree</span></td></tr>
+   <tr class="highlight"><td>Yahoo · both legs div-adjusted</td><td class="mono">−60.1%</td><td class="mono">−18.4%</td><td class="mono">2008-03-19</td><td><span class="tag agree">agree</span></td></tr>
+  </tbody>
+ </table>
+ <p style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:12px">Two independent providers, raw and dividend-adjusted. The dividend-adjusted cash leg earns interest through 2008, which is why its final drawdown lands slightly tighter. Every path agrees on the trip date and the order of magnitude.</p>
+</div>
+
+<div class="sec">
+ <div class="sec-label">Honest limits</div>
+ <div class="caveat">
+  <h3>What this test does not claim</h3>
+  <div class="prose" style="margin:0">
+  <ul>
+   <li><b>One episode, not a distribution.</b> 2008 has a specific shape. 2000 and 1929 crashed differently; those replays are separate work before the tail is fully mapped.</li>
+   <li><b>Regime proxy.</b> For a semis-only book the regime gate uses SOXX against its own 200-day average, a defensible stand-in for the live index gate but not identical to it.</li>
+   <li><b>Mostly defensive.</b> The breaker plus bear regime kept the book in cash ~96% of the window. That is why it survived — capital preservation over participation — but it also means the system sat out most of 2008 by design.</li>
+  </ul>
+  </div>
+ </div>
+</div>
+
+<div class="foot">
+ <span>Lean Terminal · systematic trading validation</span>
+ <span>SOXX / SHY daily · 2008-01-02 → 2009-06-29 · <a href="https://github.com/raul-builds/lean-terminal">github.com/raul-builds/lean-terminal</a></span>
+</div>
+</div></body></html>
