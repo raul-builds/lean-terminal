@@ -26,6 +26,8 @@ It is also — explicitly — a **quant dev portfolio piece** aimed at a junior 
 | `walkforward.py` | Rolling-window validation engine, 1-day action lag. |
 | ~140 older `lean_terminal_v*.html` | Version history. **The launcher is the only thing that marks which is current.** Do not assume the highest number is live. |
 
+**The terminal contains its own embedded backlog** — a 15-item "Loading Deck" panel on the DNA Lab tab, never reconciled against the dock (D205). Do not treat it as authoritative.
+
 **The folder is flat and has ~244 entries.** Organizing it is an open task (D222). Do not reorganize without being asked — the launcher and several scripts reference paths.
 
 ---
@@ -41,7 +43,7 @@ Internal terms, used constantly, non-standard:
 - **fatigue** — momentum exhaustion score, 0–100.
 - **rhythm** — position in the cycle, as a percentage.
 - **noise** — signal entropy, 0–100. Runs 79–99 in practice. **Several thresholds were calibrated for a different scale and are unreachable.**
-- **bench** — abstention discipline. The operator has been on the bench since L14. This is a feature.
+- **bench** — three unrelated uses, they collide in any grep. (1) **BENCH pill** — the feature. Days since the last new non-cash entry. `computeBenchDays()` ~:7159, `updateBenchPill()` ~:7176. Skips SGOV and anything tagged cash/safety — "parking isn't a deployment." Measures idle *capital*, not holding period; closed trades don't reset it, only a live non-cash position does. Hardcoded yellow, no threshold logic. Operator has been on the bench since L14 and that is deliberate. (2) **Benchmark** — unrelated panel, portfolio vs SPY/SGOV with alpha, `renderBenchmark()` ~:7184. Dominates any search for "bench." (3) **bench stocks** — ETF component jargon in the Loading Deck: rank 1–3 in a parent ETF is a "team captain," rank 20+ is a "bench" stock.
 - **LEAN / AGG** — risk posture modes. LEAN base position $75, AGG $125.
 - **Wario** — the Alpaca paper account.
 - **dock** — the issue tracker, a tab in the sheet. Rows are `D###`. Currently past D220.
@@ -84,6 +86,7 @@ Internal terms, used constantly, non-standard:
 - **Two stack classifiers exist** — `calcEMAStack()` (6 states, used by cards) and `searchTickerMath()` (4 states, different names). Line ~4832 tests a string the first classifier never produces — dead branch.
 - **MARKOV_CURRENT** renders "no probability data" board-wide.
 - **Six tickers are stale or dead** in PRICE_HISTORY: AMD and SPCX stopped 2026-06-30; CGC, HYFM, MSOS, TLRY stopped 2026-04-17 (a universe swap, not a feed failure).
+- **BENCH pill has no threshold logic** — hardcoded yellow, no escalation between 10 and 60 days. Same class as the score column: reads like a judgment, is a raw number.
 - **RADAR catalogues 134 tickers; PRICE_HISTORY carries 32.** Roughly 102 tickers cannot be scored. This gates most radar and diversification work.
 
 ---
