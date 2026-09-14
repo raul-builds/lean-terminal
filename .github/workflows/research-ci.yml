@@ -1,0 +1,22 @@
+name: research-ci
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Unit + golden tests
+        run: pytest -q
+        env:
+          LEAN_TAPE: tests/fixtures/tape_fixture.csv
+      - name: Data-integrity battery on the fixture
+        run: python battery_v2.py tests/fixtures/tape_fixture.csv RETIRED=CGC,HYFM,MSOS,TLRY,AMD,SPCX
+      - name: Reproduce D250-R headline
+        run: python d250r.py tests/fixtures/tape_fixture.csv
